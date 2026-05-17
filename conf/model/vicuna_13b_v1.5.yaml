@@ -1,0 +1,19 @@
+name: lmsys/vicuna-13b-v1.5
+response_template: " ASSISTANT:"
+chat_template: "{% if messages[0]['role'] == 'system' %}{{ messages[0]['content'] + ' ' }}{% endif %}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + ' ' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + ' ' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'ASSISTANT:' }}{% endif %}"
+
+tokenizer:
+  _target_: transformers.AutoTokenizer.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  trust_remote_code: true
+  padding_side: "left"
+
+llm:
+  _target_: transformers.AutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  device_map: "auto"
+  trust_remote_code: true
+  
+  dtype: 
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16

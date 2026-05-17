@@ -1,0 +1,24 @@
+# Qwen3 8B - Reasoning-capable model with thinking/non-thinking modes
+# Note: For jailbreak experiments, we use enable_thinking=False in data_utils.py
+# to match standard instruct model behavior (no CoT reasoning blocks)
+name: Qwen/Qwen3-8B
+response_template: "<|im_start|>assistant\n"
+
+# Qwen3 uses the same ChatML format as Qwen2.5
+# The thinking mode is controlled via enable_thinking parameter in apply_chat_template
+
+tokenizer:
+  _target_: transformers.AutoTokenizer.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  trust_remote_code: true
+  padding_side: "left"
+
+llm:
+  _target_: transformers.AutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  device_map: "auto"
+  trust_remote_code: true
+  
+  dtype: 
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16

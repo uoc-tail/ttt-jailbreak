@@ -1,0 +1,53 @@
+defaults:
+  - model: ???
+  - hydra: default
+  - data: ???
+  - backend: hf
+  - trainer: null
+  - generate: default
+  - finetune_mode: null
+  - _self_
+
+seed: 42
+output_dir_name: ???
+results_dir_name: results
+timestamp: ${now:%Y-%m-%d_%H-%M-%S}
+
+output_dir: "${path:${hydra:runtime.cwd}/${results_dir_name}/${hydra:runtime.choices.model}/${oc.select:data.name,'artifacts'}/${data.split}/random_search/${output_dir_name}_${timestamp}}"
+
+max_prompt_length: 2048
+start_idx: 0
+num_problems: null
+
+# Override generation defaults for random search:
+# greedy decoding, single response (matching AdversariaLLM reference).
+generate:
+  max_new_tokens: 512
+  do_sample: false
+  num_return_sequences: 1
+
+# Loss-guided random search parameters.
+attack:
+  # Number of optimization steps.
+  num_steps: 500
+
+  # Candidates evaluated per step.
+  candidates_per_generation: 8
+
+  # Max token flips per candidate (mutation radius).
+  neighborhood_radius: 1
+
+  # Suffix length in tokens.
+  n_tokens_adv: 20
+
+  # Initial adversarial suffix text (empty = random init).
+  adv_init: "x x x x x x x x x x x x x x x x x x x x"
+
+  # Early stopping: stop RS when P(first_target_token) exceeds this threshold.
+  early_stop_prob: 0.5
+
+  # Whether to allow non-ASCII tokens in the suffix.
+  allow_non_ascii: false
+
+  # Used by experiments/fewshot_rs_experiment.py to size the TTT inner loop.
+  ttt_steps: 1

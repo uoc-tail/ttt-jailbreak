@@ -1,0 +1,32 @@
+_target_: ttt_jailbreak.data.load_and_format_dataset
+
+path: "json"
+data_files: "${hydra:runtime.cwd}/datasets/alpaca.jsonl"
+name: "alpaca"
+split: "train"
+
+system_prompt_presets:
+  qwen: "You are a helpful assistant."
+  llama3: "You are a helpful assistant."
+  gemma: ""  # Gemma models do not support a system role
+  default: "You are a helpful assistant."
+
+system_prompt_preset: default
+system_prompt: ${data.system_prompt_presets.${data.system_prompt_preset}}
+
+input_column: "instruction"
+target_column: "output"
+
+column_mapping:
+  instruction: goal
+  output: target
+
+metadata_keys:
+  - instruction
+  - output
+
+prompt_key: "prompt"
+
+enable_thinking: null
+suffix: null
+universal_prompt_template: null

@@ -1,0 +1,7 @@
+sampling:
+  temperature: 0.0
+  max_tokens: 20
+  seed: 42
+
+system_prompt: safety
+validity_prompt: default

@@ -1,0 +1,13 @@
+defaults:
+  - _base
+  - _self_
+
+model:
+  path: "openai/gpt-oss-20b"
+  tensor_parallel_size: 1
+  dtype: "bfloat16"
+  gpu_memory_utilization: 0.90
+  max_model_len: 8096
+
+sampling:
+  max_tokens: 1024

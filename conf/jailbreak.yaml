@@ -1,0 +1,25 @@
+defaults:
+  - model: ???
+  - hydra: default
+  - data: ???
+  - backend: hf
+  - trainer: null
+  - generate: default
+  - finetune_mode: null
+  - defense: null
+  - _self_
+
+seed: 42
+output_dir_name: ???
+timestamp: ${now:%Y-%m-%d_%H-%M-%S}
+
+results_dir_name: results
+output_dir: "${path:${hydra:runtime.cwd}/${results_dir_name}/${hydra:runtime.choices.model}/${oc.select:data.name,'artifacts'}/${data.split}/${oc.select:finetune_mode.name,''}/${output_dir_name}_${timestamp}}"
+
+max_prompt_length: 2048
+start_idx: 0
+num_problems: null
+
+# Source macro category for experiments/cross_category_experiment.py.
+# Ignored by scripts/jailbreak.py.
+source_category: null

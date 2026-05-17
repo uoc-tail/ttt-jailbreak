@@ -1,0 +1,18 @@
+name: Qwen/Qwen2.5-1.5B-Instruct
+response_template: "<|im_start|>assistant\n"
+
+tokenizer:
+  _target_: transformers.AutoTokenizer.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  trust_remote_code: true
+  padding_side: "left"
+
+llm:
+  _target_: transformers.AutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  device_map: "auto"
+  trust_remote_code: true
+  
+  dtype: 
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16

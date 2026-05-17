@@ -1,0 +1,19 @@
+name: meta-llama/Llama-2-7b-chat-hf
+response_template: " [/INST]"
+chat_template: "{{ bos_token }}{% if messages[0]['role'] == 'system' %}{{ '[INST] <<SYS>>\\n' + messages[0]['content'] + '\\n<</SYS>>\\n\\n' }}{% else %}{{ '[INST] ' }}{% endif %}{% for message in messages %}{% if message['role'] == 'user' %}{{ message['content'] + ' [/INST]' }}{% elif message['role'] == 'assistant' %}{{ ' ' + message['content'] + ' ' + eos_token + '[INST] ' }}{% endif %}{% endfor %}"
+
+tokenizer:
+  _target_: transformers.AutoTokenizer.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  trust_remote_code: true
+  padding_side: "left"
+
+llm:
+  _target_: transformers.AutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  device_map: "auto"
+  trust_remote_code: true
+  
+  dtype: 
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16

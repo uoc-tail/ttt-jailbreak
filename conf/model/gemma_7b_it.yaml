@@ -1,0 +1,26 @@
+# Google Gemma 7B Instruct
+# Note: Gemma uses a specific chat template with <start_of_turn> and <end_of_turn> markers
+# Gemma-7b-it supports system prompts via the user turn (prepended to first user message)
+# or by using the model's built-in chat template which handles system messages
+name: google/gemma-7b-it
+response_template: "<start_of_turn>model\n"
+
+# Gemma chat format:
+# <start_of_turn>user\n{user_message}<end_of_turn>\n<start_of_turn>model\n{assistant_response}<end_of_turn>
+# System prompts can be included at the start of the first user turn
+
+tokenizer:
+  _target_: transformers.AutoTokenizer.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  trust_remote_code: true
+  padding_side: "left"
+
+llm:
+  _target_: transformers.AutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  device_map: "auto"
+  trust_remote_code: true
+  
+  dtype: 
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16

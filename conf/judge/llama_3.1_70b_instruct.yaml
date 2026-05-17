@@ -1,0 +1,11 @@
+defaults:
+  - _base
+  - _self_
+
+model:
+  path: "meta-llama/Meta-Llama-3.1-70B-Instruct"
+  tensor_parallel_size: 4
+  dtype: "bfloat16"
+  gpu_memory_utilization: 0.90
+  max_model_len: 8096
+

@@ -1,0 +1,20 @@
+name: Qwen/Qwen2.5-1.5B
+
+tokenizer:
+  _target_: transformers.AutoTokenizer.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  trust_remote_code: true
+  padding_side: "left"
+
+llm:
+  _target_: transformers.AutoModelForCausalLM.from_pretrained
+  pretrained_model_name_or_path: ${model.name}
+  device_map: "auto"
+  trust_remote_code: true
+
+  dtype:
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16
+
+# Plain-text chat template for base model (no special tokens, no system prompt)
+chat_template: "{% for message in messages %}{% if message['role'] == 'user' %}Question: {{ message['content'] }}\n\nAnswer:{% endif %}{% endfor %}{% if add_generation_prompt %}{% endif %}"

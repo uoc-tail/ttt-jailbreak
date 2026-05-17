@@ -1,0 +1,19 @@
+args:
+  max_steps: 5
+  learning_rate: 5e-5
+  weight_decay: 0.0
+  optimizer: adamw
+  grad_clip: null
+  bf16: true
+  lr_scheduler: constant  # constant (recommended for TTT), linear, cosine
+  gradient_checkpointing: true
+
+peft_config:
+  _target_: peft.LoraConfig
+  r: 32
+  lora_alpha: 64
+  lora_dropout: 0.05
+  target_modules: all-linear
+  bias: none
+  task_type: CAUSAL_LM
+  use_rslora: true

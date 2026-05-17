@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test-Time Training Undermines Safety Guardrails</title>
+  <meta name="description" content="Test-Time Training (TTT) updates LLM weights at inference and erases safety alignment. We expose this vulnerability across 7 open-weight models and production fine-tuning APIs." />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Test-Time Training Undermines Safety Guardrails" />
+  <meta property="og:description" content="A handful of gradient steps at inference is enough to jailbreak aligned LLMs across model families and production APIs." />
+  <meta property="og:image" content="static/og_preview.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Test-Time Training Undermines Safety Guardrails" />
+  <meta name="twitter:description" content="A handful of gradient steps at inference is enough to jailbreak aligned LLMs across model families and production APIs." />
+  <meta name="twitter:image" content="static/og_preview.jpg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <h1 class="title">Test-Time Training Undermines Safety Guardrails</h1>
+
+    <div class="warning-banner" role="note">
+      Warning: this paper contains red-teaming data and model-generated content that may be offensive.
+    </div>
+
+    <ol class="authors">
+      <li><span class="author-name">Simone Antonelli</span><sup>1,*</sup></li>
+      <li><span class="author-name">Sadegh Akhondzadeh</span><sup>2,*</sup></li>
+      <li><span class="author-name">Aleksandar Bojchevski</span><sup>2</sup></li>
+    </ol>
+    <p class="affil">
+      <sup>1</sup>CISPA Helmholtz Center for Information Security &nbsp;·&nbsp;
+      <sup>2</sup>University of Cologne<br/>
+      <sup>*</sup>Equal contribution
+    </p>
+
+    <nav class="badges" aria-label="Paper resources">
+      <a class="icon-btn icon-btn-arxiv" href="https://arxiv.org/abs/2605.22984" title="arXiv: 2605.22984" aria-label="arXiv paper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </a>
+      <a class="icon-btn icon-btn-github" href="https://github.com/UoC-tail/ttt-jailbreak" title="Source code on GitHub" aria-label="GitHub repository">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      </a>
+      <button class="icon-btn icon-btn-bib" id="cite-btn" type="button" title="Copy BibTeX citation" aria-label="Copy BibTeX citation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="tldr">
+  <div class="container container--wide">
+    <header class="section-head">
+      <h2>TL;DR</h2>
+    </header>
+    <ol class="tldr-list">
+      <li class="tldr-item">
+        <div>
+          <h3>LLMs adapt at test time</h3>
+          <p>Test-Time Training updates model weights on-the-fly to improve performance on individual inputs.</p>
+        </div>
+      </li>
+      <li class="tldr-item">
+        <div>
+          <h3>Safety lives in static weights</h3>
+          <p>Alignment assumes fixed parameters. It was never designed to survive weight updates.</p>
+        </div>
+      </li>
+      <li class="tldr-item">
+        <div>
+          <h3>TTT erases the guardrails</h3>
+          <p>A few fine-tuning steps are enough to strip safety alignment, turning a safe model into an unsafe one.</p>
+        </div>
+      </li>
+      <li class="tldr-item">
+        <div>
+          <h3>This generalizes broadly</h3>
+          <p>We expose this vulnerability across seven open-weight models and a production fine-tuning API.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="overview">
+  <div class="container container--wide">
+    <header class="section-head">
+      <h2>Attack overview</h2>
+    </header>
+    <p class="lead">
+      We identify three TTT threat models. The model parameters
+      <span class="mono">&theta;</span> are updated via an adaptation operator
+      <span class="mono">&theta;&prime; = T(&theta;, D; &lambda;)</span>,
+      where <span class="mono">D = (x<sub>1:n</sub>, &psi;)</span> contains the clean prompt and
+      adversary-controlled <span class="mono">&psi;</span>. Each threat model minimizes a different
+      next-token-prediction loss. After adaptation, the model bypasses safety alignment.
+    </p>
+    <figure class="teaser">
+      <img src="static/teaser.png" alt="Diagram of the three TTT threat models: self-supervised, few-shot, and generation-phase. A safe LLM is adapted with attacker-controlled data and produces unsafe output." />
+    </figure>
+  </div>
+</section>
+
+<section class="results">
+  <div class="container container--wide">
+    <header class="section-head">
+      <h2>Three threat models, one shared mechanism</h2>
+    </header>
+
+    <div class="threat-grid">
+      <article class="threat threat-self">
+        <header>
+          <span class="threat-tag">Self-supervised</span>
+          <h3>Adapt on the user's prompt</h3>
+        </header>
+        <p class="threat-desc">
+          The model adapts on the user's own clean prompt via self-supervised next-token prediction.
+          No adversarial data needed.
+        </p>
+        <div class="stat">
+          <span class="stat-num">+13<span class="stat-unit">pp</span></span>
+          <span class="stat-label">avg ASR@10 across models</span>
+        </div>
+        <p class="threat-take">
+          Even clean, optimized prompts degrade safety alignment.
+        </p>
+      </article>
+
+      <article class="threat threat-fewshot">
+        <header>
+          <span class="threat-tag">Few-shot</span>
+          <h3>Adapt on K harmful examples</h3>
+        </header>
+        <p class="threat-desc">
+          Adversary supplies <span class="mono">K=5</span> harmful prompt &rarr; affirmative-prefix pairs
+          and the model adapts before answering the target query.
+        </p>
+        <div class="stat">
+          <span class="stat-num">95<span class="stat-unit">%</span></span>
+          <span class="stat-label">avg ASR@10 across models</span>
+        </div>
+        <p class="threat-take">
+          A single example (<span class="mono">K=1</span>) is already enough to break alignment.
+        </p>
+      </article>
+
+      <article class="threat threat-gen">
+        <header>
+          <span class="threat-tag">Generation-phase</span>
+          <h3>Adapt on an affirmative prefix</h3>
+        </header>
+        <p class="threat-desc">
+          Adversary supplies the model with an affirmative prefix conditioned on the query
+          (e.g.&nbsp;"Sure, here is&hellip;").
+        </p>
+        <div class="stat">
+          <span class="stat-num">93<span class="stat-unit">%</span></span>
+          <span class="stat-label">avg ASR@10 across models</span>
+        </div>
+        <p class="threat-take">
+          Priming the model is enough. No harmful content needed.
+        </p>
+      </article>
+    </div>
+
+    <p class="results-models">
+      Evaluated on Gemma 7B, Llama 3 8B, Llama 3 70B, Qwen 2.5 1.5B, Qwen 2.5 7B, Qwen 3 1.7B, and Qwen 3 8B.
+    </p>
+  </div>
+</section>
+
+<section class="extra">
+  <div class="container container--wide">
+    <header class="section-head">
+      <h2>Additional findings</h2>
+    </header>
+
+    <div class="extra-list">
+      <article class="extra-row extra-row-figure">
+        <div class="extra-row-text">
+          <h3>TTT composes with adversarial prompts</h3>
+          <p>
+            Layering few-shot TTT on top of clean, adversarial-template, and adversarial-suffix
+            prompts lifts every variant to near <strong>100%</strong> ASR@10 by step 2 on Llama 3 8B,
+            even where each component alone is weak.
+          </p>
+        </div>
+        <figure>
+          <img src="static/rs_ttt_comparison.png" alt="ASR@10 vs. TTT steps on Llama 3 8B for five configurations (clean, adv. template, adv. template + adv. suffix on base RS, adv. template + adv. suffix on TTT'd model, and ICL k=5), all converging near 100% by step 2." />
+        </figure>
+      </article>
+
+      <article class="extra-row extra-row-figure">
+        <div class="extra-row-text">
+          <h3>Degenerate outputs fool the judge</h3>
+          <p>
+            Standard LLM safety judges can overestimate ASR by up to
+            <strong>13 percentage points</strong> because TTT overfits and produces degenerate text.
+            Our validity-aware pipeline restores accuracy and eliminates these false positives.
+          </p>
+        </div>
+        <figure>
+          <img src="static/validity_judge_poster.png" alt="Judge accuracy and degenerate-false-positive count across no-filter, heuristic, and LLM validity filtering." />
+        </figure>
+      </article>
+
+      <article class="extra-row">
+        <div class="extra-row-text">
+          <h3>Attacks transfer to production APIs</h3>
+          <p>
+            On Tinker, the few-shot attack reaches <strong>100%</strong> ASR@10 on GPT-OSS 120B
+            and <strong>98%</strong> for generation-phase, with no API-specific tuning, for under
+            <strong>$2</strong> per attack.
+          </p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="defense">
+  <div class="container container--wide">
+    <header class="section-head">
+      <h2>A first defense</h2>
+    </header>
+    <div class="defense-row">
+      <div class="defense-text">
+        <p>
+          As a first step, we propose a provider-side detector that compares the model's
+          perplexity on a private harmful holdout before and after TTT. If the holdout
+          perplexity drops above a per-model threshold, the request is flagged.
+        </p>
+        <p>
+          This catches our vanilla attacks with high true-positive rate and low false-positive
+          rate, but it is unlikely to withstand adaptive attacks. Robust deployment will
+          require <strong>dynamic alignment</strong> that explicitly accounts for test-time
+          weight updates.
+        </p>
+      </div>
+      <figure class="defense-fig">
+        <img src="static/defense_scatter.png" alt="Scatter of harmful-holdout perplexity before vs. after TTT, separating attacks from benign refusals." />
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="takeaways">
+  <div class="container container--wide">
+    <header class="section-head">
+      <h2>Takeaways</h2>
+    </header>
+    <ol class="take-list">
+      <li><div><strong>TTT exposes a new attack surface.</strong> Adversaries now have a lever on the parameters, not just the input.</div></li>
+      <li><div><strong>Attacks transfer to production APIs.</strong> Even a 120B-parameter model is fully jailbroken for under $2.</div></li>
+      <li><div><strong>Safety evaluation must go dynamic.</strong> Static red-teaming misses vulnerabilities that emerge only under weight updates.</div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="poster-section">
+  <div class="container container--wide">
+    <header class="section-head">
+      <h2>Poster</h2>
+    </header>
+    <p class="lead">
+      Presented at the
+      <a href="https://openreview.net/forum?id=0fttB7cUsu">ICLR 2026 Workshop on Trustworthy AI</a>.
+    </p>
+    <a class="poster-thumb" href="static/poster.pdf" aria-label="Open full poster PDF">
+      <img src="static/poster.png" alt="Full conference poster: Test-Time Training Undermines Safety Guardrails." />
+    </a>
+  </div>
+</section>
+
+</main>
+
+<dialog id="cite-dialog" class="cite-dialog" aria-labelledby="cite-dialog-title">
+  <div class="cite-dialog-inner">
+    <header class="cite-dialog-head">
+      <h2 id="cite-dialog-title">BibTeX</h2>
+      <span class="cite-dialog-status" id="cite-status" aria-live="polite">Copied to clipboard</span>
+      <button class="cite-dialog-close" type="button" data-close aria-label="Close">&times;</button>
+    </header>
+<pre id="bib-code">@misc{antonelli2026testtimetrainingunderminessafety,
+      title={Test-Time Training Undermines Safety Guardrails},
+      author={Simone Antonelli and Sadegh Akhondzadeh and Aleksandar Bojchevski},
+      year={2026},
+      eprint={2605.22984},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2605.22984},
+}</pre>
+    <button class="cite-dialog-copy" type="button" id="cite-recopy">Copy again</button>
+  </div>
+</dialog>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>&copy; 2026 the authors.</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var dialog = document.getElementById('cite-dialog');
+    var openBtn = document.getElementById('cite-btn');
+    var status = document.getElementById('cite-status');
+    var bibText = document.getElementById('bib-code').textContent.trim();
+    var recopy = document.getElementById('cite-recopy');
+
+    function copy() {
+      if (!navigator.clipboard) {
+        status.textContent = 'Press Cmd/Ctrl+C to copy';
+        return;
+      }
+      navigator.clipboard.writeText(bibText).then(function () {
+        status.textContent = 'Copied to clipboard';
+      }, function () {
+        status.textContent = 'Press Cmd/Ctrl+C to copy';
+      });
+    }
+
+    openBtn.addEventListener('click', function () {
+      copy();
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', '');
+    });
+
+    recopy.addEventListener('click', copy);
+
+    dialog.addEventListener('click', function (e) {
+      if (e.target === dialog || e.target.hasAttribute('data-close')) dialog.close();
+    });
+  })();
+</script>
+
+</body>
+</html>

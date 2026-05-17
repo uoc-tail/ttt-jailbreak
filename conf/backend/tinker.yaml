@@ -1,0 +1,16 @@
+# Tinker API backend
+#
+# Requires TINKER_API_KEY in the environment and the optional `tinker` +
+# `tinker-cookbook` packages installed. The renderer is auto-resolved from the
+# model name (see DEFAULT_RENDERERS in tinker.py); override with renderer_name
+# if needed.
+#
+# Note: Tinker does not expose perplexity, so combining this backend with the
+# defense module hard-errors at runtime.
+_target_: ttt_jailbreak.ttt.TinkerBackend
+
+model_name: ${model.name}
+system_prompt: ${oc.select:data.system_prompt,""}
+max_length: ${max_prompt_length}
+renderer_name: null
+lora_rank: ${oc.select:trainer.peft_config.r,32}

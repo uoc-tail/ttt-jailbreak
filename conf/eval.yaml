@@ -1,0 +1,13 @@
+defaults:
+  - hydra: default
+  - judge: ???
+  - _self_
+
+results_path: "???"
+
+output_folder: ${hydra:runtime.choices.judge}
+
+server:
+  url: "http://localhost:8000/v1"
+  model_name: ${judge.model.path}
+  batch_size: 50

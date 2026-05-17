@@ -1,0 +1,8 @@
+name: "few_shot"
+
+# Number of examples to sample (other than the target problem itself).
+num_shots: 5
+
+# If true, sampling is seeded with cfg.seed + problem_idx so the set of
+# few-shot examples is reproducible across runs.
+deterministic_sampling: true

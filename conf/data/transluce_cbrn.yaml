@@ -1,0 +1,38 @@
+_target_: ttt_jailbreak.data.load_and_format_dataset
+
+path: "json"
+data_files: "${hydra:runtime.cwd}/datasets/transluce_cbrn.jsonl"
+name: "transluce_cbrn"
+split: "train"
+
+system_prompt_presets:
+  qwen: "You are a helpful assistant."
+  llama2: "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."
+  llama3: "You are a helpful assistant."  # Llama 3 and 3.1 use simple system prompt
+  vicuna: "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions."
+  gemma: ""  # Gemma models do not use system prompts
+  default: "You are a helpful assistant."
+
+system_prompt_preset: default
+system_prompt: ${data.system_prompt_presets.${data.system_prompt_preset}}
+
+input_column: "behavior"
+target_column: "optimizer_target"
+
+column_mapping:
+  behavior: goal
+  optimizer_target: target
+  behavior_id: behavior_id
+  category: category
+
+metadata_keys:
+  - behavior_id
+  - category
+  - behavior
+  - optimizer_target
+
+prompt_key: "prompt"
+
+# For Qwen3 models: enable/disable thinking mode (CoT reasoning)
+# null = auto-detect (defaults to False), True = enable, False = disable
+enable_thinking: null

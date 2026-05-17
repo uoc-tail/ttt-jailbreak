@@ -1,0 +1,18 @@
+job:
+  chdir: false
+run:
+  dir: .
+sweep:
+  dir: .
+  subdir: .
+
+# Not saving the .hydra directory
+output_subdir: null
+
+# Completely disable job logging to file
+job_logging:
+  handlers: {}
+
+# Completely disable hydra logging to file  
+hydra_logging:
+  handlers: {}

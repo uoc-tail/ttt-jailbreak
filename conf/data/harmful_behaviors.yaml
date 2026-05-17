@@ -1,0 +1,45 @@
+_target_: ttt_jailbreak.data.load_and_format_dataset
+
+path: "csv"
+data_files: "${hydra:runtime.cwd}/datasets/harmful_behaviors/harmful_behaviors_pair.csv"
+name: "harmful_behaviors"
+split: "train"
+
+system_prompt_presets:
+  qwen: "You are a helpful assistant."
+  llama2: "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.\n\nIf a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."
+  llama3: "You are a helpful assistant."  # Llama 3 and 3.1 use simple system prompt
+  vicuna: "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions."
+  gemma: ""  # Gemma models do not use system prompts (removed per llm-adaptive-attacks)
+  mistral: ""  # Mistral models do not use system prompts (emulated via user message if needed)
+  default: "You are a helpful assistant."
+
+system_prompt_preset: default
+system_prompt: ${data.system_prompt_presets.${data.system_prompt_preset}}
+
+input_column: "goal"
+target_column: "target"
+
+column_mapping:
+  goal: goal
+  target: target
+  category: category
+  advbench_index: advbench_index
+
+metadata_keys:
+  - goal
+  - target
+  - category
+  - advbench_index
+
+prompt_key: "prompt"
+
+# For Qwen3 models: enable/disable thinking mode (CoT reasoning)
+# null = auto-detect (defaults to False), True = enable, False = disable
+enable_thinking: null
+
+# Jailbreak attack settings (optional)
+# suffix: Adversarial suffix to append to the input
+# universal_prompt_template: Template name ("refined_best", "icl_one_shot", "simple") or null
+suffix: null
+universal_prompt_template: null

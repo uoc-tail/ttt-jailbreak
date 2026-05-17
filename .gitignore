@@ -1,0 +1,38 @@
+# Hydra outputs
+outputs/
+multirun.yaml
+.hydra/
+
+# Experiment outputs
+results*/
+logs/
+logs_*/
+*.log
+
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Virtual environments
+.venv/
+.env
+
+# Caches
+*cache*
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Local overrides
+*.local
+cluster_test_prompt.md
+refactor_regression_report.md

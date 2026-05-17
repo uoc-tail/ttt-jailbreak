@@ -1,0 +1,32 @@
+_target_: ttt_jailbreak.data.load_and_format_dataset
+
+path: "json"
+data_files: "${hydra:runtime.cwd}/datasets/math.jsonl"
+name: "math"
+split: "train"
+
+system_prompt_presets:
+  qwen: "You are a helpful assistant."
+  llama3: "You are a helpful assistant."
+  gemma: ""  # Gemma models do not support a system role
+  default: "You are a helpful assistant."
+
+system_prompt_preset: default
+system_prompt: ${data.system_prompt_presets.${data.system_prompt_preset}}
+
+input_column: "problem"
+target_column: "solution"
+
+column_mapping:
+  problem: goal
+  solution: target
+
+metadata_keys:
+  - problem
+  - solution
+
+prompt_key: "prompt"
+
+enable_thinking: null
+suffix: null
+universal_prompt_template: null

@@ -1,0 +1,28 @@
+# HuggingFace transformers backend
+_target_: ttt_jailbreak.ttt.HuggingFaceBackend
+
+model_name: ${model.name}
+system_prompt: ${oc.select:data.system_prompt,"You are a helpful assistant."}
+max_length: ${max_prompt_length}
+chat_template: ${oc.select:model.chat_template,null}
+enable_thinking: ${oc.select:data.enable_thinking,null}
+
+# Recursive instantiation: when trainer.peft_config has a _target_, Hydra
+# turns it into a LoraConfig object here. When the trainer config disables
+# peft (full FT, ~trainer.peft_config), this resolves to null and the backend
+# runs in full-FT mode (reload-on-reset).
+peft_config: ${oc.select:trainer.peft_config,null}
+
+tokenizer_kwargs:
+  trust_remote_code: true
+  padding_side: left
+
+model_kwargs:
+  device_map: auto
+  trust_remote_code: true
+  dtype:
+    _target_: hydra.utils.get_object
+    path: torch.bfloat16
+
+# ttt_train kwargs other than n_steps/lr (those are passed per-call in fit).
+train_args: ${oc.select:trainer.args,{}}
